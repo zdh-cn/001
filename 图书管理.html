@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="./lib/bootstrap.css" />
+  <script src="./lib/jquery.js"></script>
+</head>
+
+<body style="padding: 15px;">
+  <!-- 添加图书的Panel面板 -->
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <h3 class="panel-title">添加新图书</h3>
+    </div>
+    <div class="panel-body form-inline">
+
+      <div class="input-group">
+        <div class="input-group-addon">书名</div>
+        <input type="text" class="form-control" id="iptBookname" placeholder="请输入书名">
+      </div>
+
+      <div class="input-group">
+        <div class="input-group-addon">作者</div>
+        <input type="text" class="form-control" id="iptAuthor" placeholder="请输入作者">
+      </div>
+
+      <div class="input-group">
+        <div class="input-group-addon">出版社</div>
+        <input type="text" class="form-control" id="iptPublisher" placeholder="请输入出版社">
+      </div>
+
+      <button id="btnAdd" class="btn btn-primary">添加</button>
+
+    </div>
+  </div>
+
+
+  <!-- 图书的表格 -->
+  <table class="table table-bordered table-hover">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>书名</th>
+        <th>作者</th>
+        <th>出版社</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="tb">
+      <!-- <tr>
+        <td>1</td>
+        <td>史记</td>
+        <td>司马迁</td>
+        <td>河北出版社</td>
+        <td>
+          <a href="javascript:;" class="del">删除</a>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>斗破苍穹</td>
+        <td>天蚕土豆</td>
+        <td>网络
+          出版社</td>
+        <td>
+          <a href="javascript:;" class="del">删除</a>
+        </td>
+      </tr> -->
+    </tbody>
+  </table>
+
+  <script>
+    // ----------------------  写一段代码，请求接口，获取所有的图书 ---------------
+     // 目标：封装的和 jQuery中的  $.ajax() 一样
+
+
+        // 封装函数
+        function ajax(obj) {
+            // 获取请求方式
+            var type = obj.type || 'GET'; // 调函数的时候，如果传递了请求参数方式，使用传递的请求方式，没有传入请求方式，则使用GET
+            type = type.toUpperCase(); // 无论传入的是大写还是小写的请求方式，统一转为大写
+            // 获取url
+            var url = obj.url;
+            // 获取data
+            var data = obj.data;
+            // 获取success函数
+            var success = obj.success;
+
+            // 要实现ajax请求，完成最基本的几个步骤
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var res = JSON.parse(xhr.responseText);
+                    // 这里获取到了服务器返回的结果，把服务器返回的结果传递给success函数
+                    success(res);
+                }
+            }
+
+            // 处理请求参数（把对象形式的参数处理成查询字符串格式）
+            // var data = { id: 1, bookname: '红&黑' };
+            // 数组，准备存放每个请求参数
+            var arr = [];
+            for (var key in data) {
+                // arr.push('id=1');
+                arr.push(key + '=' + encodeURIComponent(data[key]));
+            }
+            // console.log(arr); // ["id=1", "bookname=%E7%BA%A2%26%E9%BB%91"]
+            var str = arr.join('&');
+
+            // 判断请求方式
+            if (type === 'GET') {
+                xhr.open('GET', url + '?' + str);
+                xhr.send();
+            } else if (type === 'POST') {
+                xhr.open('POST', url);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send(str);
+            }
+        }
+
+        // 如何使用
+       
+
+       
+    function getBooks() {
+
+
+     
+
+
+
+
+      $.get('http://www.liulongbin.top:3006/api/getbooks', function (res) {
+        console.log(res);
+        if (res.status === 200) {
+     
+          var arr = [];
+          
+          $.each(res.data, function (i, v) {
+            arr.push(`<tr>
+                        <td>${v.id}</td>
+                        <td>${v.bookname}</td>
+                        <td>${v.author}</td>
+                        <td>${v.publisher}</td>
+                        <td>
+                          <a href="javascript:;" class="del" data-id="${v.id}">删除</a>
+                        </td>
+                      </tr>`);
+          });
+        
+          var str = arr.join('');
+          // 4. 把所有的tr放到tbody中
+          $('#tb').html(str); // $('#tb').empty().append(str);
+        } else {
+          alert('获取书籍失败');
+        }
+      });
+    }
+
+    
+    getBooks();
+
+
+    // ----------------------  写一段代码，请求接口，添加图书 ---------------
+    $('#btnAdd').click(function () {
+      // 1. 获取输入框的值（三个）
+      var bookname = $('#iptBookname').val().trim();
+      var author = $('#iptAuthor').val().trim();
+      var publisher = $('#iptPublisher').val().trim();
+     
+      if (bookname == '' || author == '' || publisher == '') {
+        return alert('内容不能为空');
+      }
+     
+
+
+       ajax({
+            type: 'POST',
+            url: 'http://www.liulongbin.top:3006/api/addbook',
+            data: { bookname: bookname, author:author, publisher: publisher },
+            success: function (res) {
+                console.log(res);
+                getBooks();
+            }
+        });
+      
+     
+      
+    });
+  
+    // ----------------------  写一段代码，请求接口，删除图书 ---------------
+    // 1. 找到页面中的删除按钮，注册单击事件(对于动态添加的元素，必须使用事件委托的方案)
+    $('#tb').on('click', '.del', function () {
+      
+      // 2. 对于敏感操作，最好给一个提示（询问是否要删除）
+      // confirm('你确定要删除吗，你好狠！'); // 用户点击了确定，confirm返回true。反之返回false
+      if (!confirm('你确定要删除吗，你好狠！')) {
+        return;
+      }
+      // 3. 如果确定是删除，按照接口，完成接口的要求
+      // console.log('111');
+      // var that = $(this);
+      var id = $(this).attr('data-id');
+      $.get('http://www.liulongbin.top:3006/api/delbook', {id: id}, function (res) {
+        // 不用判断，先给出提示(因为，无论成功还是失败，都要给出提示)
+        alert(res.msg);
+        // 判断，如果成功了，移除掉当前的这一行
+        if (res.status === 200) {
+          // 移除当前这一行，方案有二。
+          // 其一是that.parents('tr').remove();
+          // 其二是从新调用getBooks() 函数，从新渲染页面
+          getBooks();
+        }
+      });
+    });
+    
+  </script>
+
+</body>
+
+</html>
